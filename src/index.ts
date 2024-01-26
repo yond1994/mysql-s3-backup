@@ -1,3 +1,4 @@
+require('dotenv').config();
 import { CronJob } from "cron";
 
 import { backup } from "./backup";

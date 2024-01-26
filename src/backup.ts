@@ -34,10 +34,12 @@ const dumpToFile = async (path: string): Promise<void> => {
   console.log(`Dumping database to file at ${path}...`);
 
   await new Promise((resolve, reject) => {
-    exec(
-      `mysqldump --host=${env.BACKUP_DATABASE_HOST} --port=${env.BACKUP_DATABASE_PORT} --user=${env.BACKUP_DATABASE_USER} --password=${env.BACKUP_DATABASE_PASSWORD} ${env.BACKUP_DATABASE_NAME} | gzip > ${path}`,
-      (error, _, stderr) => {
+   // const command = `mysqldump --user=${env.BACKUP_DATABASE_USER} --password=${env.BACKUP_DATABASE_PASSWORD} --host=${env.BACKUP_DATABASE_HOST} --port=${env.BACKUP_DATABASE_PORT}  --single-transaction --routines --triggers --databases ${env.BACKUP_DATABASE_NAME} > ${path}`;
+    const command = `mysqldump --host=${env.BACKUP_DATABASE_HOST} --port=${env.BACKUP_DATABASE_PORT} --user=${env.BACKUP_DATABASE_USER} --password=${env.BACKUP_DATABASE_PASSWORD} ${env.BACKUP_DATABASE_NAME} | gzip > ${path}`;
+   
+    exec(command, (error, _, stderr) => {
         if (error) {
+          console.log(error);
           reject({ error: JSON.stringify(error), stderr });
           return;
         }
@@ -69,11 +71,12 @@ export const backup = async (): Promise<void> => {
 
   const timestamp = new Date().toISOString().replace(/[:.]+/g, '-');
   const filename = `backup-${timestamp}.sql.gz`;
+  // const filepath = `/tmp/${filename}`;
   const filepath = `/tmp/${filename}`;
 
   await dumpToFile(filepath);
   await uploadToS3({name: filename, path: filepath});
-  await deleteFile(filepath);
+  // await deleteFile(filepath);
 
   console.log("Database backup complete!")
 }
